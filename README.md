@@ -1,56 +1,128 @@
-# Welcome to your Expo app 👋
+# Hábitos & Metas — Expo + Supabase (versão atualizada)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+App Web/Mobile de hábitos e metas feito com Expo (Expo Router), React Native, Supabase e React Query.
 
-## Get started
+## O que há de novo nesta versão
 
-1. Install dependencies
+| Novidade | Onde |
+|---|---|
+| Tela de **Perfil** (e-mail, avatar com iniciais, estatísticas, botão "Sair da conta") | `app/(tabs)/profile.tsx` + aba em `app/(tabs)/_layout.tsx` |
+| **Card de hábito** com check-in animado, ícones de editar (lápis) e excluir (lixeira com confirmação) | `components/HabitCard.tsx`, `app/(tabs)/index.tsx` |
+| **Horário opcional** no hábito (campo `HH:MM`; hábitos com horário aparecem primeiro, do mais cedo ao mais tarde) | `components/HabitFormModal.tsx`, `hooks/useHabits.ts`, `lib/types.ts` |
+| **Nova coluna no banco**: `habits.reminder_time` | `supabase/migrations/002_habit_reminder_time.sql` e `supabase/schema.sql` |
 
-   ```bash
-   npm install
+Arquivos novos: `app/(tabs)/profile.tsx`, `components/HabitCard.tsx`, `supabase/migrations/002_habit_reminder_time.sql`.
+Arquivos alterados: `app/(tabs)/_layout.tsx`, `app/(tabs)/index.tsx`, `components/HabitFormModal.tsx`, `hooks/useHabits.ts`, `lib/types.ts`, `supabase/schema.sql`.
+
+---
+
+## Passo a passo
+
+### 1. Pré-requisitos
+- Node.js (versão LTS atual) e npm.
+- Uma conta e um projeto no [Supabase](https://supabase.com).
+- Para testar no celular: app **Expo Go** (mesma rede Wi‑Fi do computador) ou um emulador Android/iOS. Para testar no navegador, nada além do Node.
+
+### 2. Aplicar as atualizações no seu projeto
+1. Feche o servidor do Expo, se estiver rodando (Ctrl+C).
+2. (Recomendado) Faça um commit ou backup do projeto atual.
+3. Extraia o `.zip` e copie as pastas `app/`, `components/`, `hooks/`, `lib/`, `providers/` e `supabase/` para a raiz do seu projeto `habit-tracker`, **aceitando substituir** os arquivos existentes.
+4. Este zip **não contém** `.env`, `node_modules`, `package.json`, `app.json` nem `tsconfig.json`; nada disso é sobrescrito.
+
+### 3. Atualizar o Supabase
+
+**Cenário A — você já tinha rodado o `schema.sql` antes (caso mais comum):**
+1. No painel do Supabase, abra **SQL Editor → New query**.
+2. Cole o conteúdo de `supabase/migrations/002_habit_reminder_time.sql` e clique em **Run**:
+   ```sql
+   alter table public.habits
+     add column if not exists reminder_time time;
    ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
+   Pode rodar mais de uma vez sem problema (`if not exists`).
+3. Confira se a coluna existe:
+   ```sql
+   select column_name, data_type
+   from information_schema.columns
+   where table_schema = 'public' and table_name = 'habits'
+   order by ordinal_position;
    ```
+   A lista deve incluir `reminder_time | time without time zone`.
+4. Nenhuma política (RLS) precisa mudar: as políticas de `habits` já valem para a nova coluna. Seus hábitos e histórico existentes continuam intactos (o horário fica vazio neles).
 
-In the output, you'll find options to open the app in a
+**Cenário B — projeto Supabase novo (nunca rodou o schema):**
+1. **SQL Editor → New query**, cole **todo** o `supabase/schema.sql` e clique em **Run**. Ele já cria tabelas, RLS, trigger de perfil e a coluna `reminder_time`. Não precisa rodar a migração 002.
+2. Confirme em **Table Editor** que existem `profiles`, `habits`, `habit_logs` e `goals`.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+**Autenticação (nos dois cenários):**
+- Em **Authentication → Providers → Email**, mantenha o provedor ativo.
+- Para testar rápido, você pode desativar **Confirm email**; com ele ativo, o app avisa que é preciso confirmar o e-mail antes de entrar.
 
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### 4. Configurar o `.env`
+Na raiz do projeto, o arquivo `.env` deve ter (Project Settings → API no Supabase):
+```
+EXPO_PUBLIC_SUPABASE_URL=https://SEU-PROJETO.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=SUA_ANON_OU_PUBLISHABLE_KEY
+```
+Use apenas a chave **anon/publishable**, nunca a `service_role`. Se você já tinha o `.env`, não precisa mudar nada.
 
-## Get a fresh project
-
-When you're ready, run:
-
+### 5. Instalar dependências
+Na raiz do projeto:
 ```bash
-npm run reset-project
+npm install
+```
+Esta atualização não adiciona nenhuma dependência nova. Se o Expo reclamar de versões, rode `npx expo install --fix`.
+
+### 6. Verificar o código (opcional, recomendado)
+```bash
+npx tsc --noEmit
+npx expo lint
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+### 7. Rodar
+```bash
+npx expo start -c
+```
+O `-c` limpa o cache do Metro e garante que o `.env` seja lido de novo. No terminal:
+- `w` abre no **navegador**;
+- `a` abre no emulador **Android**; `i` no simulador **iOS** (macOS);
+- ou escaneie o **QR code** com o Expo Go no celular.
 
-### Other setup steps
+Se o Expo Go não abrir o projeto por incompatibilidade de SDK, use o navegador (`w`) ou gere um development build (`npx expo run:android` / `npx expo run:ios`).
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+### 8. Checklist de teste
+1. Entre com sua conta (ou crie uma em "Ainda não tenho conta").
+2. Aba **Hoje** → **Novo hábito** → preencha o nome, escolha a frequência e informe um horário (digite `0730` e ele vira `07:30`) → **Salvar**.
+3. Toque no círculo do card: ele pulsa, o card fica verde com o título riscado e aparece "Concluído hoje". Toque de novo para desmarcar.
+4. Toque no **lápis** → altere nome, frequência ou horário → **Salvar**.
+5. Toque na **lixeira** → confirme a exclusão.
+6. Aba **Metas** → crie uma meta e registre progresso.
+7. Aba **Perfil** → confira e-mail, iniciais, estatísticas e use **Sair da conta** (volta para o login).
 
-## Learn more
+### 9. Problemas comuns
+| Sintoma | Causa provável e solução |
+|---|---|
+| `column habits.reminder_time does not exist` ou erro ao carregar/salvar hábitos | A migração 002 não foi executada. Rode o passo 3. |
+| "Defina EXPO_PUBLIC_SUPABASE_URL…" ao abrir | `.env` ausente ou fora da raiz. Corrija e reinicie com `npx expo start -c`. |
+| `new row violates row-level security policy` | O schema/RLS não foi aplicado no projeto Supabase em uso, ou o `.env` aponta para outro projeto. |
+| Depois do cadastro nada acontece | "Confirm email" está ativo: confirme o e-mail ou desative a opção em Authentication → Providers → Email. |
+| Aba Perfil não aparece | Verifique se `app/(tabs)/profile.tsx` existe e se `app/(tabs)/_layout.tsx` foi substituído; reinicie com `-c`. |
+| Streak não passa de ~120 dias | É um limite proposital: o app carrega os últimos 120 dias de check-ins (`LOG_WINDOW_DAYS` em `hooks/useHabits.ts`). |
 
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### 10. Estrutura do projeto
+```
+app/
+  _layout.tsx            rotas protegidas por sessão
+  (auth)/login.tsx       login e cadastro
+  (tabs)/
+    _layout.tsx          abas Hoje, Metas, Perfil
+    index.tsx            dashboard de hábitos
+    goals.tsx            metas
+    profile.tsx          perfil e estatísticas
+components/              HabitCard, HabitFormModal, GoalFormModal, ConsistencyGrid, ui
+hooks/                   useHabits, useGoals (React Query)
+lib/                     supabase, tema, tipos, datas/streak, confirm
+providers/               AuthProvider
+supabase/
+  schema.sql             schema completo (instalação nova)
+  migrations/            002_habit_reminder_time.sql (atualização)
+```
