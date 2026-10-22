@@ -1,3 +1,22 @@
+// Polyfill de proteção contra o DOMException no navegador
+if (typeof window !== 'undefined') {
+  try {
+    window.localStorage.getItem('test');
+  } catch (e) {
+    const memoryStore = new Map();
+    const safeStorage = {
+      getItem: (key: string) => memoryStore.get(key) || null,
+      setItem: (key: string, value: string) => { memoryStore.set(key, value); },
+      removeItem: (key: string) => { memoryStore.delete(key); },
+      clear: () => { memoryStore.clear(); },
+      key: (index: number) => Array.from(memoryStore.keys())[index] || null,
+      length: 0,
+    };
+    Object.defineProperty(window, 'localStorage', { value: safeStorage, configurable: true });
+    Object.defineProperty(window, 'sessionStorage', { value: safeStorage, configurable: true });
+  }
+}
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -17,7 +36,6 @@ function Routes() {
     );
   }
 
-  // Stack.Protected (Expo Router v5+): redireciona automaticamente conforme a sessão.
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={!!session}>
