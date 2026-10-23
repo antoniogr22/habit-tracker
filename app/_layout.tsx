@@ -17,16 +17,33 @@ if (typeof window !== 'undefined') {
   }
 }
 
+import { useEffect, useState } from 'react';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { theme } from '@/lib/theme';
 import { AuthProvider, useAuth } from '@/providers/AuthProvider';
 
-function Routes() {
+function AuthGuard() {
   const { session, loading } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (loading) return;
+
+    const inTabsGroup = segments[0] === '(tabs)';
+    const inAuthGroup = segments[0] === '(auth)';
+
+    if (session && !inTabsGroup) {
+      // Se está logado e NÃO está nas tabs, redireciona para as tabs
+      router.replace('/(tabs)');
+    } else if (!session && !inAuthGroup) {
+      // Se NÃO está logado e NÃO está no auth/login, redireciona para login
+      router.replace('/(auth)/login');
+    }
+  }, [session, loading, segments]);
 
   if (loading) {
     return (
@@ -36,16 +53,8 @@ function Routes() {
     );
   }
 
-  return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Protected guard={!!session}>
-        <Stack.Screen name="(tabs)" />
-      </Stack.Protected>
-      <Stack.Protected guard={!session}>
-        <Stack.Screen name="(auth)" />
-      </Stack.Protected>
-    </Stack>
-  );
+  // O Stack autogerido carrega as rotas corretamente sem loops
+  return <Stack screenOptions={{ headerShown: false }} />;
 }
 
 export default function RootLayout() {
@@ -54,7 +63,7 @@ export default function RootLayout() {
     <QueryClientProvider client={client}>
       <AuthProvider>
         <StatusBar style="dark" />
-        <Routes />
+        <AuthGuard />
       </AuthProvider>
     </QueryClientProvider>
   );
