@@ -22,10 +22,11 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View } from 'react-native';
-import { theme } from '@/lib/theme';
 import { AuthProvider, useAuth } from '@/providers/AuthProvider';
+import { ThemeProvider, useTheme } from '@/providers/ThemeProvider';
 
 function AuthGuard() {
+  const { colors } = useTheme();
   const { session, loading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
@@ -47,8 +48,8 @@ function AuthGuard() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.bg }}>
-        <ActivityIndicator color={theme.colors.primary} />
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg }}>
+        <ActivityIndicator color={colors.primary} />
       </View>
     );
   }
@@ -62,9 +63,15 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={client}>
       <AuthProvider>
-        <StatusBar style="dark" />
-        <AuthGuard />
+        <ThemeProvider>
+          <ThemedApp />
+        </ThemeProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
+}
+
+function ThemedApp() {
+  const { mode } = useTheme();
+  return <><StatusBar style={mode === 'dark' ? 'light' : 'dark'} /><AuthGuard /></>;
 }

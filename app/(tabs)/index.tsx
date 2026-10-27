@@ -1,17 +1,17 @@
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { ConsistencyGrid } from '@/components/ConsistencyGrid';
+import { HabitCalendar } from '@/components/HabitCalendar';
 import { HabitCard } from '@/components/HabitCard';
 import { HabitFormModal } from '@/components/HabitFormModal';
 import { Button, Card, ErrorText, ProgressBar, Screen } from '@/components/ui';
 import { useDeleteHabit, useHabits, useToggleLog } from '@/hooks/useHabits';
 import { calcStreak, countInWeek, startOfWeek, today } from '@/lib/dates';
-import { theme } from '@/lib/theme';
+import { useTheme } from '@/providers/ThemeProvider';
 import type { Habit } from '@/lib/types';
 
-const c = theme.colors;
 
 export default function TodayScreen() {
+  const { colors: c } = useTheme();
   const { data, isLoading, error } = useHabits();
   const toggle = useToggleLog();
   const remove = useDeleteHabit();
@@ -55,7 +55,7 @@ export default function TodayScreen() {
 
   return (
     <Screen title="Hoje" subtitle={dateLabel}>
-      <Card style={s.hero}>
+      <Card style={[s.hero, { backgroundColor: c.primary, borderColor: c.primary }]} >
         <View style={s.summaryRow}>
           <Text style={s.pct}>{view.pct}%</Text>
           <Text style={s.summaryText}>{view.total ? `${view.done} de ${view.total} hábitos concluídos hoje` : 'Nenhum hábito ainda'}</Text>
@@ -67,7 +67,7 @@ export default function TodayScreen() {
       <ErrorText message={error ? 'Não foi possível carregar seus hábitos.' : null} />
       <ErrorText message={remove.isError ? 'Não foi possível excluir o hábito.' : null} />
 
-      {view.total > 0 && <Text style={s.sectionTitle}>Seus hábitos</Text>}
+      {view.total > 0 && <Text style={[s.sectionTitle, { color: c.ink }]}>Seus hábitos</Text>}
       <View style={{ gap: 12 }}>
         {view.rows.map(({ habit, doneToday, streak, weekCount }) => (
           <HabitCard
@@ -85,8 +85,8 @@ export default function TodayScreen() {
 
       {!isLoading && view.total === 0 && (
         <Card>
-          <Text style={s.emptyTitle}>Comece com um hábito simples</Text>
-          <Text style={s.emptySub}>Algo que leve menos de 5 minutos, como beber um copo de água ao acordar.</Text>
+          <Text style={[s.emptyTitle, { color: c.ink }]}>Comece com um hábito simples</Text>
+          <Text style={[s.emptySub, { color: c.muted }]}>Algo que leve menos de 5 minutos, como beber um copo de água ao acordar.</Text>
         </Card>
       )}
 
@@ -94,8 +94,8 @@ export default function TodayScreen() {
 
       {view.total > 0 && (
         <Card>
-          <Text style={[s.emptyTitle, { marginBottom: 14 }]}>Consistência nas últimas 5 semanas</Text>
-          <ConsistencyGrid doneByDate={view.doneByDate} totalHabits={view.total} />
+          <Text style={[s.emptyTitle, { color: c.ink, marginBottom: 14 }]}>Calendário de consistência</Text>
+          <HabitCalendar doneByDate={view.doneByDate} totalHabits={view.total} />
         </Card>
       )}
 
@@ -105,11 +105,11 @@ export default function TodayScreen() {
 }
 
 const s = StyleSheet.create({
-  hero: { backgroundColor: c.primary, borderColor: c.primary, padding: 24, gap: 18 },
+  hero: { padding: 24, gap: 18 },
   summaryRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   pct: { fontSize: 56, lineHeight: 60, fontWeight: '800', color: '#fff', letterSpacing: -1 },
   summaryText: { flex: 1, color: '#E6F2EC', fontSize: 16, lineHeight: 22, fontWeight: '500' },
-  sectionTitle: { fontSize: 20, fontWeight: '800', color: c.ink, paddingHorizontal: 4, marginTop: 4 },
-  emptyTitle: { fontSize: 17, fontWeight: '700', color: c.ink },
-  emptySub: { fontSize: 14, lineHeight: 20, color: c.muted, marginTop: 4 },
+  sectionTitle: { fontSize: 20, fontWeight: '800', paddingHorizontal: 4, marginTop: 4 },
+  emptyTitle: { fontSize: 17, fontWeight: '700', },
+  emptySub: { fontSize: 14, lineHeight: 20, marginTop: 4 },
 });

@@ -1,16 +1,17 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { ComponentProps, useMemo, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Switch, Text, View } from 'react-native';
 import { Button, Card, Screen } from '@/components/ui';
 import { useGoals } from '@/hooks/useGoals';
 import { useHabits } from '@/hooks/useHabits';
 import { calcStreak, today } from '@/lib/dates';
 import { supabase } from '@/lib/supabase';
+import { useTheme } from '@/providers/ThemeProvider';
 import { theme } from '@/lib/theme';
+
 import { useAuth } from '@/providers/AuthProvider';
 
-const c = theme.colors;
 type IconName = ComponentProps<typeof Ionicons>['name'];
 
 function initialsOf(name: string) {
@@ -22,18 +23,20 @@ function initialsOf(name: string) {
 }
 
 function Stat({ icon, value, label }: { icon: IconName; value: string | number; label: string }) {
+  const { colors: c } = useTheme();
   return (
-    <View style={s.stat}>
-      <View style={s.statIcon}>
+    <View style={[s.stat, { backgroundColor: c.primarySoft }]} >
+      <View style={[s.statIcon, { backgroundColor: c.surface }]} >
         <Ionicons name={icon} size={20} color={c.primary} />
       </View>
-      <Text style={s.statValue}>{value}</Text>
-      <Text style={s.statLabel}>{label}</Text>
+      <Text style={[s.statValue, { color: c.ink }]}>{value}</Text>
+      <Text style={[s.statLabel, { color: c.muted }]}>{label}</Text>
     </View>
   );
 }
 
 export default function ProfileScreen() {
+  const { colors: c, mode, toggleMode } = useTheme();
   const { session } = useAuth();
   const qc = useQueryClient();
   const habits = useHabits();
@@ -89,19 +92,29 @@ export default function ProfileScreen() {
     <Screen title="Perfil">
       <Card>
         <View style={s.header}>
-          <View style={s.avatar} accessibilityLabel={`Avatar de ${displayName}`}>
+          <View style={[s.avatar, { backgroundColor: c.primary }]} accessibilityLabel={`Avatar de ${displayName}`}>
             <Text style={s.avatarText}>{initialsOf(fullName || email)}</Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={s.name} numberOfLines={1}>{displayName}</Text>
-            <Text style={s.email} numberOfLines={1}>{email}</Text>
-            {memberSince && <Text style={s.since}>Membro desde {memberSince}</Text>}
+            <Text style={[s.name, { color: c.ink }]} numberOfLines={1}>{displayName}</Text>
+            <Text style={[s.email, { color: c.muted }]} numberOfLines={1}>{email}</Text>
+            {memberSince && <Text style={[s.since, { color: c.muted }]} >Membro desde {memberSince}</Text>}
           </View>
         </View>
       </Card>
 
       <Card>
-        <Text style={s.sectionTitle}>Seu resumo</Text>
+        <View style={s.themeRow}>
+          <View style={s.themeCopy}>
+            <Text style={[s.sectionTitle, { color: c.ink, marginBottom: 4 }]}>Modo escuro</Text>
+            <Text style={[s.email, { color: c.muted }]}>Personaliza a aparência da aplicação</Text>
+          </View>
+          <Switch accessibilityLabel="Ativar modo escuro" value={mode === 'dark'} onValueChange={toggleMode} trackColor={{ false: c.line, true: c.primary }} thumbColor="#fff" />
+        </View>
+      </Card>
+
+      <Card>
+        <Text style={[s.sectionTitle, { color: c.ink }]}>Seu resumo</Text>
         <View style={s.grid}>
           <Stat icon="list-outline" value={stats.active} label="hábitos ativos" />
           <Stat icon="checkmark-done-outline" value={`${stats.doneToday}/${stats.active}`} label="concluídos hoje" />
@@ -120,13 +133,15 @@ export default function ProfileScreen() {
 }
 
 const s = StyleSheet.create({
+  themeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  themeCopy: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 18 },
-  avatar: { width: 72, height: 72, borderRadius: 36, backgroundColor: c.primary, alignItems: 'center', justifyContent: 'center' },
+  avatar: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center' },
   avatarText: { color: '#fff', fontSize: 28, fontWeight: '800' },
-  name: { fontSize: 22, fontWeight: '800', color: c.ink, letterSpacing: -0.3 },
-  email: { fontSize: 14, color: c.muted, marginTop: 2 },
-  since: { fontSize: 13, color: c.muted, marginTop: 6 },
-  sectionTitle: { fontSize: 20, fontWeight: '800', color: c.ink, marginBottom: 16 },
+  name: { fontSize: 22, fontWeight: '800', letterSpacing: -0.3 },
+  email: { fontSize: 14, marginTop: 2 },
+  since: { fontSize: 13, marginTop: 6 },
+  sectionTitle: { fontSize: 20, fontWeight: '800', marginBottom: 16 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   stat: {
     flexGrow: 1,
@@ -134,10 +149,9 @@ const s = StyleSheet.create({
     gap: 6,
     padding: 16,
     borderRadius: theme.radius.md + 2,
-    backgroundColor: c.primarySoft,
   },
-  statIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: c.surface, alignItems: 'center', justifyContent: 'center', marginBottom: 2 },
-  statValue: { fontSize: 30, lineHeight: 34, fontWeight: '800', color: c.ink, letterSpacing: -0.5 },
-  statLabel: { fontSize: 13, lineHeight: 18, color: c.muted, fontWeight: '500' },
+  statIcon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginBottom: 2 },
+  statValue: { fontSize: 30, lineHeight: 34, fontWeight: '800', letterSpacing: -0.5 },
+  statLabel: { fontSize: 13, lineHeight: 18, fontWeight: '500' },
   logout: { marginTop: 6 },
 });

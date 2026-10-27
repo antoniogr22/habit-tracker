@@ -3,8 +3,8 @@ import { Tabs } from 'expo-router';
 import { ComponentProps } from 'react';
 import { Platform } from 'react-native';
 import { theme } from '@/lib/theme';
+import { useTheme } from '@/providers/ThemeProvider';
 
-const c = theme.colors;
 type IconName = ComponentProps<typeof Ionicons>['name'];
 
 /** Ícone preenchido quando a aba está ativa, contornado quando não. */
@@ -14,6 +14,7 @@ const icon = (active: IconName, inactive: IconName) =>
   };
 
 export default function TabsLayout() {
+  const { colors: c } = useTheme();
   return (
     <Tabs
       screenOptions={{

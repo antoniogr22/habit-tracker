@@ -4,6 +4,7 @@ import { Button, ErrorText, Field, Sheet } from '@/components/ui';
 import { useDeleteHabit, useSaveHabit } from '@/hooks/useHabits';
 import { confirmAction } from '@/lib/confirm';
 import { theme } from '@/lib/theme';
+import { useTheme } from '@/providers/ThemeProvider';
 import type { Frequency, Habit } from '@/lib/types';
 
 interface Props { visible: boolean; habit: Habit | null; onClose: () => void }
@@ -17,6 +18,7 @@ const maskTime = (raw: string) => {
 };
 
 export function HabitFormModal({ visible, habit, onClose }: Props) {
+  const { colors: c } = useTheme();
   const save = useSaveHabit();
   const del = useDeleteHabit();
   const [title, setTitle] = useState('');
@@ -62,22 +64,22 @@ export function HabitFormModal({ visible, habit, onClose }: Props) {
     <Sheet visible={visible} onClose={onClose} title={habit ? 'Editar hábito' : 'Novo hábito'}>
       <Field label="Nome" value={title} onChangeText={setTitle} placeholder="Ex.: Beber 2L de água" maxLength={80} />
       <View style={{ gap: 6 }}>
-        <Text style={s.label}>Frequência</Text>
+        <Text style={[s.label, { color: c.muted }]}>Frequência</Text>
         <View style={s.segment}>
           {(['daily', 'weekly'] as const).map((f) => (
-            <Pressable key={f} onPress={() => setFrequency(f)} style={[s.seg, frequency === f && s.segOn]}>
-              <Text style={[s.segText, frequency === f && { color: '#fff' }]}>{f === 'daily' ? 'Diário' : 'Semanal'}</Text>
+            <Pressable key={f} onPress={() => setFrequency(f)} style={[s.seg, { borderColor: c.line, backgroundColor: frequency === f ? c.primary : c.surface }]}>
+              <Text style={[s.segText, { color: frequency === f ? '#fff' : c.ink }]}>{f === 'daily' ? 'Diário' : 'Semanal'}</Text>
             </Pressable>
           ))}
         </View>
       </View>
       {frequency === 'weekly' && (
         <View style={{ gap: 6 }}>
-          <Text style={s.label}>Vezes por semana</Text>
+          <Text style={[s.label, { color: c.muted }]}>Vezes por semana</Text>
           <View style={s.segment}>
             {[1, 2, 3, 4, 5, 6, 7].map((n) => (
-              <Pressable key={n} onPress={() => setTarget(n)} style={[s.seg, target === n && s.segOn]}>
-                <Text style={[s.segText, target === n && { color: '#fff' }]}>{n}</Text>
+              <Pressable key={n} onPress={() => setTarget(n)} style={[s.seg, { borderColor: c.line, backgroundColor: target === n ? c.primary : c.surface }]}>
+                <Text style={[s.segText, { color: target === n ? '#fff' : c.ink }]}>{n}</Text>
               </Pressable>
             ))}
           </View>
@@ -100,9 +102,8 @@ export function HabitFormModal({ visible, habit, onClose }: Props) {
 }
 
 const s = StyleSheet.create({
-  label: { fontSize: 13, color: theme.colors.muted, fontWeight: '500' },
+  label: { fontSize: 13, fontWeight: '500' },
   segment: { flexDirection: 'row', gap: 6 },
-  seg: { flex: 1, minHeight: 40, alignItems: 'center', justifyContent: 'center', borderRadius: theme.radius.sm, borderWidth: 1, borderColor: theme.colors.line },
-  segOn: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
-  segText: { fontWeight: '600', color: theme.colors.ink },
+  seg: { flex: 1, minHeight: 40, alignItems: 'center', justifyContent: 'center', borderRadius: theme.radius.sm, borderWidth: 1 },
+  segText: { fontWeight: '600',  },
 });

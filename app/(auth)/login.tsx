@@ -3,9 +3,10 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } fr
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, ErrorText, Field } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
-import { theme } from '@/lib/theme';
+import { useTheme } from '@/providers/ThemeProvider';
 
 export default function Login() {
+  const { colors: c } = useTheme();
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -40,19 +41,19 @@ export default function Login() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.bg }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: c.bg }}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
           <View style={s.box}>
-            <Text style={s.title}>{mode === 'login' ? 'Entrar' : 'Criar conta'}</Text>
-            <Text style={s.sub}>Hábitos pequenos, repetidos todo dia, levam às suas metas.</Text>
+            <Text style={[s.title, { color: c.ink }]} >{mode === 'login' ? 'Entrar' : 'Criar conta'}</Text>
+            <Text style={[s.sub, { color: c.muted }]} >Hábitos pequenos, repetidos todo dia, levam às suas metas.</Text>
 
             {mode === 'signup' && <Field label="Nome" value={name} onChangeText={setName} autoComplete="name" />}
             <Field label="E-mail" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" />
             <Field label="Senha" value={password} onChangeText={setPassword} secureTextEntry autoComplete="password" onSubmitEditing={submit} />
 
             <ErrorText message={error} />
-            {info && <Text style={{ color: theme.colors.primary }}>{info}</Text>}
+            {info && <Text style={{ color: c.primary }}>{info}</Text>}
 
             <Button label={mode === 'login' ? 'Entrar' : 'Criar conta'} onPress={submit} loading={loading} />
             <Button
@@ -70,6 +71,6 @@ export default function Login() {
 const s = StyleSheet.create({
   content: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   box: { width: '100%', maxWidth: 400, gap: 14 },
-  title: { fontSize: 30, fontWeight: '800', color: theme.colors.ink },
-  sub: { fontSize: 15, color: theme.colors.muted, marginBottom: 6 },
+  title: { fontSize: 30, fontWeight: '800' },
+  sub: { fontSize: 15, marginBottom: 6 },
 });

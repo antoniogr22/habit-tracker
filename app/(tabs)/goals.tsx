@@ -5,12 +5,13 @@ import { Button, Card, ErrorText, ProgressBar, Screen } from '@/components/ui';
 import { useAddProgress, useGoals } from '@/hooks/useGoals';
 import { daysUntil, formatBR } from '@/lib/dates';
 import { theme } from '@/lib/theme';
+import { useTheme } from '@/providers/ThemeProvider';
 import type { Goal } from '@/lib/types';
 
-const c = theme.colors;
 const fmt = (n: number) => n.toLocaleString('pt-BR', { maximumFractionDigits: 2 });
 
 function GoalCard({ goal, onEdit }: { goal: Goal; onEdit: () => void }) {
+  const { colors: c } = useTheme();
   const add = useAddProgress();
   const [amount, setAmount] = useState('');
   const pct = Math.min(100, Math.round((goal.current_value / goal.target_value) * 100));
@@ -29,12 +30,12 @@ function GoalCard({ goal, onEdit }: { goal: Goal; onEdit: () => void }) {
     <Card>
       <Pressable onPress={onEdit} accessibilityLabel={`Editar meta ${goal.title}`}>
         <View style={s.head}>
-          <Text style={s.title}>{goal.title}</Text>
-          <Text style={[s.pct, done && { color: c.primary }]}>{pct}%</Text>
+          <Text style={[s.title, { color: c.ink }]}>{goal.title}</Text>
+          <Text style={[s.pct, { color: done ? c.primary : c.ink }]}>{pct}%</Text>
         </View>
       </Pressable>
       <ProgressBar pct={pct} color={done ? c.primary : c.accent} />
-      <Text style={s.sub}>
+      <Text style={[s.sub, { color: c.muted }]} >
         {fmt(goal.current_value)} de {fmt(goal.target_value)}{unit}
         {goal.deadline
           ? ` · prazo ${formatBR(goal.deadline)}${left !== null && !done ? (left >= 0 ? ` (${left} dias)` : ' (vencido)') : ''}`
@@ -51,7 +52,7 @@ function GoalCard({ goal, onEdit }: { goal: Goal; onEdit: () => void }) {
             placeholder="Adicionar progresso"
             placeholderTextColor={c.muted}
             onSubmitEditing={submit}
-            style={s.addInput}
+            style={[s.addInput, { color: c.ink, borderColor: c.line, backgroundColor: c.surface }]}
           />
           <View style={{ width: 100 }}>
             <Button label="Somar" onPress={submit} loading={add.isPending} />
@@ -63,6 +64,7 @@ function GoalCard({ goal, onEdit }: { goal: Goal; onEdit: () => void }) {
 }
 
 export default function GoalsScreen() {
+  const { colors: c } = useTheme();
   const { data, isLoading, error } = useGoals();
   const [editing, setEditing] = useState<Goal | null>(null);
   const [open, setOpen] = useState(false);
@@ -78,8 +80,8 @@ export default function GoalsScreen() {
 
       {!isLoading && data?.length === 0 && (
         <Card>
-          <Text style={s.title}>Defina sua primeira meta</Text>
-          <Text style={s.sub}>Escolha um valor e um prazo, como “Correr 50 km neste mês”.</Text>
+          <Text style={[s.title, { color: c.ink }]}>Defina sua primeira meta</Text>
+          <Text style={[s.sub, { color: c.muted }]} >Escolha um valor e um prazo, como “Correr 50 km neste mês”.</Text>
         </Card>
       )}
 
@@ -91,9 +93,9 @@ export default function GoalsScreen() {
 
 const s = StyleSheet.create({
   head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10, gap: 12 },
-  title: { flex: 1, fontSize: 17, fontWeight: '700', color: c.ink },
-  pct: { fontSize: 20, fontWeight: '800', color: c.ink },
-  sub: { fontSize: 13, color: c.muted, marginTop: 8 },
+  title: { flex: 1, fontSize: 17, fontWeight: '700', },
+  pct: { fontSize: 20, fontWeight: '800', },
+  sub: { fontSize: 13, marginTop: 8 },
   addRow: { flexDirection: 'row', gap: 8, marginTop: 12, alignItems: 'center' },
-  addInput: { flex: 1, minHeight: 46, borderWidth: 1, borderColor: c.line, borderRadius: theme.radius.sm, paddingHorizontal: 12, fontSize: 16, color: c.ink },
+  addInput: { flex: 1, minHeight: 46, borderWidth: 1, borderRadius: theme.radius.sm, paddingHorizontal: 12, fontSize: 16, },
 });

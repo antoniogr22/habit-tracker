@@ -12,8 +12,8 @@ const shadow = (opacity: number, radius: number, y: number): ViewStyle =>
         elevation: Math.max(1, Math.round(y / 2)),
       };
 
-export const theme = {
-  colors: {
+export const palettes = {
+  light: {
     bg: '#F2F4EF',
     surface: '#FFFFFF',
     ink: '#16241E',
@@ -27,6 +27,16 @@ export const theme = {
     dangerSoft: '#FBECE9',
     dangerLine: '#EDC3BC',
   },
+  dark: {
+    bg: '#101A16', surface: '#1A2822', ink: '#EDF5F0', muted: '#A1B4AA', line: '#2D4037',
+    primary: '#2F805F', primarySoft: '#233D32', accent: '#F0B85B', accentSoft: '#40331F',
+    danger: '#F08D7D', dangerSoft: '#3D2825', dangerLine: '#65403A',
+  },
+} as const;
+
+export const theme = {
+  /** Alias de compatibilidade para estilos ainda estáticos; componentes dinâmicos usam useTheme(). */
+  colors: palettes.light,
   radius: { sm: 10, md: 14, lg: 22, xl: 28 },
   space: (n: number) => n * 4,
   /** Largura máxima do conteúdo (e da barra de abas) em telas grandes. */
@@ -36,3 +46,6 @@ export const theme = {
     floating: shadow(0.14, 16, 8),
   },
 };
+
+export type ThemeMode = 'light' | 'dark';
+export type ThemeColors = (typeof palettes)[ThemeMode];
