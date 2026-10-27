@@ -47,22 +47,28 @@ export default function TodayScreen() {
 
   const openNew = () => { setEditing(null); setFormOpen(true); };
 
+  // Capitaliza só a primeira letra ("segunda-feira, 26 de outubro" -> "Segunda-feira, 26 de outubro").
+  const dateLabel = (() => {
+    const d = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+    return d.charAt(0).toUpperCase() + d.slice(1);
+  })();
+
   return (
-    <Screen>
-      <Card>
-        <Text style={s.kicker}>{new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</Text>
+    <Screen title="Hoje" subtitle={dateLabel}>
+      <Card style={s.hero}>
         <View style={s.summaryRow}>
           <Text style={s.pct}>{view.pct}%</Text>
           <Text style={s.summaryText}>{view.total ? `${view.done} de ${view.total} hábitos concluídos hoje` : 'Nenhum hábito ainda'}</Text>
         </View>
-        <ProgressBar pct={view.pct} />
+        <ProgressBar pct={view.pct} color="#fff" trackColor="rgba(255,255,255,0.25)" height={12} />
       </Card>
 
       {isLoading && <ActivityIndicator color={c.primary} />}
       <ErrorText message={error ? 'Não foi possível carregar seus hábitos.' : null} />
       <ErrorText message={remove.isError ? 'Não foi possível excluir o hábito.' : null} />
 
-      <View style={{ gap: 10 }}>
+      {view.total > 0 && <Text style={s.sectionTitle}>Seus hábitos</Text>}
+      <View style={{ gap: 12 }}>
         {view.rows.map(({ habit, doneToday, streak, weekCount }) => (
           <HabitCard
             key={habit.id}
@@ -84,11 +90,11 @@ export default function TodayScreen() {
         </Card>
       )}
 
-      <Button label="Novo hábito" onPress={openNew} />
+      <Button label="Novo hábito" icon="add" onPress={openNew} />
 
       {view.total > 0 && (
         <Card>
-          <Text style={[s.emptyTitle, { marginBottom: 12 }]}>Consistência nas últimas 5 semanas</Text>
+          <Text style={[s.emptyTitle, { marginBottom: 14 }]}>Consistência nas últimas 5 semanas</Text>
           <ConsistencyGrid doneByDate={view.doneByDate} totalHabits={view.total} />
         </Card>
       )}
@@ -99,10 +105,11 @@ export default function TodayScreen() {
 }
 
 const s = StyleSheet.create({
-  kicker: { color: c.muted, fontSize: 14, textTransform: 'capitalize', marginBottom: 8 },
-  summaryRow: { flexDirection: 'row', alignItems: 'baseline', gap: 12, marginBottom: 12 },
-  pct: { fontSize: 44, fontWeight: '800', color: c.ink },
-  summaryText: { flex: 1, color: c.muted, fontSize: 15 },
-  emptyTitle: { fontSize: 16, fontWeight: '600', color: c.ink },
-  emptySub: { fontSize: 13, color: c.muted, marginTop: 2 },
+  hero: { backgroundColor: c.primary, borderColor: c.primary, padding: 24, gap: 18 },
+  summaryRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  pct: { fontSize: 56, lineHeight: 60, fontWeight: '800', color: '#fff', letterSpacing: -1 },
+  summaryText: { flex: 1, color: '#E6F2EC', fontSize: 16, lineHeight: 22, fontWeight: '500' },
+  sectionTitle: { fontSize: 20, fontWeight: '800', color: c.ink, paddingHorizontal: 4, marginTop: 4 },
+  emptyTitle: { fontSize: 17, fontWeight: '700', color: c.ink },
+  emptySub: { fontSize: 14, lineHeight: 20, color: c.muted, marginTop: 4 },
 });

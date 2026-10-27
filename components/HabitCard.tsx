@@ -51,7 +51,7 @@ export function HabitCard({ habit, doneToday, streak, weekCount, onToggle, onEdi
           onPress={handleToggle}
           style={[s.check, doneToday && s.checkOn]}
         >
-          {doneToday && <Ionicons name="checkmark" size={20} color="#fff" />}
+          {doneToday && <Ionicons name="checkmark" size={22} color="#fff" />}
         </Pressable>
       </Animated.View>
 
@@ -66,18 +66,18 @@ export function HabitCard({ habit, doneToday, streak, weekCount, onToggle, onEdi
       </View>
 
       <View style={s.streak}>
-        <Ionicons name="flame" size={16} color={streak > 0 ? c.accent : c.line} />
+        <Ionicons name="flame" size={18} color={streak > 0 ? c.accent : c.muted} />
         <Text style={[s.streakText, streak === 0 && { color: c.muted }]}>
           {streak}{isWeekly ? ' sem' : ' d'}
         </Text>
       </View>
 
       <View style={s.actions}>
-        <Pressable accessibilityLabel={`Editar ${habit.title}`} onPress={onEdit} hitSlop={8} style={s.iconBtn}>
-          <Ionicons name="create-outline" size={20} color={c.muted} />
+        <Pressable accessibilityLabel={`Editar ${habit.title}`} onPress={onEdit} hitSlop={6} style={[s.iconBtn, { backgroundColor: c.bg }]}>
+          <Ionicons name="create-outline" size={22} color={c.ink} />
         </Pressable>
-        <Pressable accessibilityLabel={`Excluir ${habit.title}`} onPress={handleDelete} hitSlop={8} style={s.iconBtn}>
-          <Ionicons name="trash-outline" size={20} color={c.danger} />
+        <Pressable accessibilityLabel={`Excluir ${habit.title}`} onPress={handleDelete} hitSlop={6} style={[s.iconBtn, { backgroundColor: c.dangerSoft }]}>
+          <Ionicons name="trash-outline" size={22} color={c.danger} />
         </Pressable>
       </View>
     </View>
@@ -88,29 +88,30 @@ const s = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
     backgroundColor: c.surface,
-    borderRadius: theme.radius.md,
+    borderRadius: theme.radius.lg,
     borderWidth: 1,
     borderColor: c.line,
-    padding: 14,
+    padding: 16,
+    ...theme.shadow.card,
   },
   cardDone: { backgroundColor: c.primarySoft, borderColor: c.primary },
   check: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     borderWidth: 2,
-    borderColor: c.line,
+    borderColor: '#C5CEC6',
     backgroundColor: c.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkOn: { backgroundColor: c.primary, borderColor: c.primary },
-  title: { fontSize: 16, fontWeight: '600', color: c.ink },
-  sub: { fontSize: 13, color: c.muted, marginTop: 2 },
-  streak: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  streakText: { fontWeight: '700', color: c.ink, fontSize: 14 },
-  actions: { flexDirection: 'row', gap: 2 },
-  iconBtn: { padding: 6 },
+  title: { fontSize: 17, lineHeight: 22, fontWeight: '700', color: c.ink },
+  sub: { fontSize: 13, color: c.muted, marginTop: 3 },
+  streak: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: c.accentSoft, borderRadius: 12, paddingHorizontal: 8, paddingVertical: 5 },
+  streakText: { fontWeight: '800', color: c.ink, fontSize: 14 },
+  actions: { flexDirection: 'row', gap: 6 },
+  iconBtn: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
 });

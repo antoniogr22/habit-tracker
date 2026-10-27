@@ -68,7 +68,7 @@ export default function GoalsScreen() {
   const [open, setOpen] = useState(false);
 
   return (
-    <Screen>
+    <Screen title="Metas" subtitle="Acompanhe seu progresso">
       {isLoading && <ActivityIndicator color={c.primary} />}
       <ErrorText message={error ? 'Não foi possível carregar suas metas.' : null} />
 

@@ -24,7 +24,9 @@ function initialsOf(name: string) {
 function Stat({ icon, value, label }: { icon: IconName; value: string | number; label: string }) {
   return (
     <View style={s.stat}>
-      <Ionicons name={icon} size={20} color={c.primary} />
+      <View style={s.statIcon}>
+        <Ionicons name={icon} size={20} color={c.primary} />
+      </View>
       <Text style={s.statValue}>{value}</Text>
       <Text style={s.statLabel}>{label}</Text>
     </View>
@@ -42,9 +44,11 @@ export default function ProfileScreen() {
   const email = user?.email ?? '';
   const fullName = (user?.user_metadata?.full_name as string | undefined)?.trim();
   const displayName = fullName || email.split('@')[0] || 'Você';
-  const memberSince = user?.created_at
+  const memberSinceRaw = user?.created_at
     ? new Date(user.created_at).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
     : null;
+  // Só a primeira letra maiúscula ("outubro de 2026" -> "Outubro de 2026").
+  const memberSince = memberSinceRaw ? memberSinceRaw.charAt(0).toUpperCase() + memberSinceRaw.slice(1) : null;
 
   const stats = useMemo(() => {
     const list = habits.data?.habits ?? [];
@@ -73,12 +77,16 @@ export default function ProfileScreen() {
 
   const logout = async () => {
     setSigningOut(true);
-    await supabase.auth.signOut(); // o Stack.Protected leva para o login
-    qc.clear();
+    try {
+      await supabase.auth.signOut(); // o AuthGuard leva para o login
+      qc.clear();
+    } finally {
+      setSigningOut(false);
+    }
   };
 
   return (
-    <Screen>
+    <Screen title="Perfil">
       <Card>
         <View style={s.header}>
           <View style={s.avatar} accessibilityLabel={`Avatar de ${displayName}`}>
@@ -103,28 +111,33 @@ export default function ProfileScreen() {
         </View>
       </Card>
 
-      <Button label="Sair da conta" variant="danger" onPress={logout} loading={signingOut} />
+      {/* Único ponto de saída da conta no app. */}
+      <View style={s.logout}>
+        <Button label="Sair da conta" icon="log-out-outline" variant="danger" onPress={logout} loading={signingOut} />
+      </View>
     </Screen>
   );
 }
 
 const s = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  avatar: { width: 64, height: 64, borderRadius: 32, backgroundColor: c.primary, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { color: '#fff', fontSize: 24, fontWeight: '800' },
-  name: { fontSize: 20, fontWeight: '700', color: c.ink },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 18 },
+  avatar: { width: 72, height: 72, borderRadius: 36, backgroundColor: c.primary, alignItems: 'center', justifyContent: 'center' },
+  avatarText: { color: '#fff', fontSize: 28, fontWeight: '800' },
+  name: { fontSize: 22, fontWeight: '800', color: c.ink, letterSpacing: -0.3 },
   email: { fontSize: 14, color: c.muted, marginTop: 2 },
-  since: { fontSize: 12, color: c.muted, marginTop: 4, textTransform: 'capitalize' },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: c.ink, marginBottom: 12 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  since: { fontSize: 13, color: c.muted, marginTop: 6 },
+  sectionTitle: { fontSize: 20, fontWeight: '800', color: c.ink, marginBottom: 16 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   stat: {
     flexGrow: 1,
     flexBasis: '45%',
-    gap: 4,
-    padding: 14,
-    borderRadius: theme.radius.sm,
+    gap: 6,
+    padding: 16,
+    borderRadius: theme.radius.md + 2,
     backgroundColor: c.primarySoft,
   },
-  statValue: { fontSize: 24, fontWeight: '800', color: c.ink },
-  statLabel: { fontSize: 13, color: c.muted },
+  statIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: c.surface, alignItems: 'center', justifyContent: 'center', marginBottom: 2 },
+  statValue: { fontSize: 30, lineHeight: 34, fontWeight: '800', color: c.ink, letterSpacing: -0.5 },
+  statLabel: { fontSize: 13, lineHeight: 18, color: c.muted, fontWeight: '500' },
+  logout: { marginTop: 6 },
 });
